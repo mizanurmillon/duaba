@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryJob;
 use App\Services\StuartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ class DeliveryController extends Controller
     {
         $this->stuart = $stuart;
     }
+
+
 
     public function createJob(Request $request)
     {
@@ -41,7 +44,14 @@ class DeliveryController extends Controller
             'time' => 'nullable|string',
         ]);
 
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error('Unauthorized', 401);
+        }
+
         try {
+
             $jobData = [
                 'pickups' => [
                     [
@@ -63,9 +73,8 @@ class DeliveryController extends Controller
                             'house_number' => $data['house_number'] ?? null,
                             'house_name' => $data['house_name'] ?? null,
                         ],
-
-                        'comment' => $data['delivery_instructions'] ?? null,
-                        'package_type' => $data['type'],
+                        'comment'        => $data['delivery_instructions'] ?? null,
+                        'package_type'   => $data['type'],
                         'client_reference' => json_encode([
                             'height' => $data['package_height'],
                             'width'  => $data['package_width'],
@@ -76,7 +85,6 @@ class DeliveryController extends Controller
                 ],
             ];
 
-            // Scheduled delivery support
             if ($data['scheduled_time'] === 'scheduled') {
                 $jobData['schedule'] = [
                     'pickup_at' => $data['date'] . 'T' . $data['time'] . ':00Z'
@@ -85,11 +93,44 @@ class DeliveryController extends Controller
 
             Log::info('Stuart API Request:', $jobData);
 
+            // Call Stuart API
             $response = $this->stuart->createJob($jobData);
 
             Log::info('Stuart API Response:', ['response' => $response]);
 
-            return $this->success($response, 'Delivery job created successfully.', 200);
+            // Extract Stuart Job ID
+            $stuartJobId = $response['id'] ?? null;
+
+            // Save into database
+            $job = DeliveryJob::create([
+                'user_id' => $user->id,
+                'pickup_address' => $data['pickup_address'],
+                'sender_name' => $data['sender_name'],
+                'sender_phone' => $data['sender_phone'],
+
+                'dropoff_address' => $data['dropoff_address'],
+                'receiver_name' => $data['receiver_name'],
+                'receiver_phone' => $data['receiver_phone'],
+
+                'house_number' => $data['house_number'] ?? null,
+                'house_name' => $data['house_name'] ?? null,
+                'delivery_instructions' => $data['delivery_instructions'] ?? null,
+
+                'package_height' => $data['package_height'],
+                'package_width' => $data['package_width'],
+                'package_depth' => $data['package_depth'],
+                'package_weight' => $data['package_weight'],
+                'package_type' => $data['type'],
+
+                'schedule_type' => $data['scheduled_time'],
+                'schedule_date' => $data['date'] ?? null,
+                'schedule_time' => $data['time'] ?? null,
+
+                'stuart_job_id' => $stuartJobId,
+                'stuart_response' => $response,
+            ]);
+
+            return $this->success($job, 'Delivery job created & stored successfully.', 200);
         } catch (\Exception $e) {
 
             Log::error('Stuart API Error: ' . $e->getMessage(), [
@@ -99,6 +140,7 @@ class DeliveryController extends Controller
             return $this->error($e->getMessage());
         }
     }
+
 
     public function getJob($jobId)
     {
