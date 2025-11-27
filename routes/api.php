@@ -5,10 +5,6 @@ use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
-
-
-
-
 //Login API
 Route::controller(LoginController::class)->prefix('users')->group(function () {
     // User Login
