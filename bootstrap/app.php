@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,10 +17,23 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
+
+            Route::middleware(['web', 'auth', 'admin'])
+                ->prefix('admin')
+                ->group(base_path('routes/backend.php'));
+
+            Route::middleware(['web', 'auth', 'admin'])
+                ->prefix('admin')
+                ->group(base_path('routes/admin_setting.php'));
+
+            Route::middleware(['web'])
+                ->group(base_path('routes/frontend.php'));
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'admin' => AdminMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (AuthenticationException $e, $request) {

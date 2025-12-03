@@ -51,17 +51,17 @@
     <div class="container">
         <p>Dear {{ $user->name }},</p>
 
-        <p>Thank you for Login with Duaba.</p>
-        <p>To complete your Login, please enter the following verification code:</p>
+        <p>Thank you for registering with [Company_Name].</p>
+        <p>To complete your registration, please enter the following verification code:</p>
 
-        <p>Code: <span class="code">{{ $otp }}</span></p>
+        <p>Code: <span class="code">{{ $code }}</span></p>
 
-        <p>This code is valid for 3 minute. Please keep it confidential for security purposes. If you did not initiate
-            this login, feel free to disregard this email.</p>
+        <p>This code is valid for 1 minute. Please keep it confidential for security purposes. If you did not initiate
+            this registration, feel free to disregard this email.</p>
 
         <p>Best regards,</p>
-        <p>Duaba</p>
-        {{--  <p><a href="https://duaba.com">https://duaba.com</a></p>  --}}
+        <p>[Company_Name]</p>
+        <p>[Contact Information]</p>
     </div>
 </body>
 
