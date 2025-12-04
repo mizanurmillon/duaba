@@ -54,7 +54,7 @@
         <p>Thank you for registering with [Company_Name].</p>
         <p>To complete your registration, please enter the following verification code:</p>
 
-        <p>Code: <span class="code">{{ $code }}</span></p>
+        <p>Code: <span class="code">{{ $otp }}</span></p>
 
         <p>This code is valid for 1 minute. Please keep it confidential for security purposes. If you did not initiate
             this registration, feel free to disregard this email.</p>
