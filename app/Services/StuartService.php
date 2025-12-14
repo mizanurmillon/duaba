@@ -84,4 +84,19 @@ class StuartService
             throw new \Exception('Stuart Job fetch failed: ' . $response->body());
         }
     }
+
+    public function getJobs()
+    {
+        $url = $this->baseUrl . '/v2/jobs';
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->accessToken,
+            'Content-Type' => 'application/json',
+        ])->get($url);
+
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            throw new \Exception('Stuart Jobs fetch failed: ' . $response->body());
+        }
+    }
 }

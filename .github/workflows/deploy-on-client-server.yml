@@ -14,6 +14,6 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.softvencefsd.xyz
-          username: nanaobiriyeboah@nanaobiriyeboah.softvencefsd.xyz
-          password: "softvence_nanaobiriyeboah"
+          server: ftp.svaalpha.com
+          username: nanaobiriyeboah@nanaobiriyeboah.svaalpha.com
+          password: "svaalpha_nanaobiriyeboah"

@@ -75,12 +75,14 @@ class DeliveryController extends Controller
                         ],
                         'comment'        => $data['delivery_instructions'] ?? null,
                         'package_type'   => $data['type'],
-                        'client_reference' => json_encode([
+                        'client_reference' => $user->id . '-' . now()->timestamp,
+                        'dimensions'    => [
                             'height' => $data['package_height'],
                             'width'  => $data['package_width'],
-                            'depth'  => $data['package_depth'],
+                            'length'  => $data['package_depth'],
                             'weight' => $data['package_weight'],
-                        ]),
+                        ],
+
                     ]
                 ],
             ];
@@ -150,6 +152,83 @@ class DeliveryController extends Controller
             Log::info('Stuart Job Details:', ['job_id' => $jobId, 'response' => $response]);
 
             return $this->success($response, 'Job details fetched successfully.', 200);
+        } catch (\Exception $e) {
+
+            Log::error('Stuart API Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->error($e->getMessage());
+        }
+    }
+
+    public function getJobs(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return $this->error('Unauthorized', 401);
+            }
+
+            // Fetch all jobs from Stuart API
+            $jobs = $this->stuart->getJobs();
+
+            // Optional status filter from request
+            $filterStatus = strtolower($request->status ?? '');
+
+            // Filter jobs based on user & optional status
+            $filteredJobs = collect($jobs)->filter(function ($job) use ($user, $filterStatus) {
+
+                // Skip if no deliveries
+                if (empty($job['deliveries'])) {
+                    return false;
+                }
+
+                $matchUser = false;
+
+                // Check all deliveries in a job
+                foreach ($job['deliveries'] as $delivery) {
+                    if (!isset($delivery['client_reference'])) continue;
+
+                    // client_reference format: userId-uniqueId
+                    $parts = explode('-', $delivery['client_reference']);
+                    $deliveryUserId = $parts[0] ?? null;
+
+                    if ($deliveryUserId == $user->id) {
+                        $matchUser = true;
+                        break; // matched, no need to check other deliveries
+                    }
+                }
+
+                if (!$matchUser) return false;
+
+                // Status filter (optional)
+                if ($filterStatus) {
+                    // Job main status
+                    $jobStatus = strtolower($job['status'] ?? '');
+
+                    // Collect all delivery statuses
+                    $deliveryStatuses = collect($job['deliveries'])->pluck('status')->map(fn($s) => strtolower($s));
+
+                    // Match if either job status or any delivery status matches
+                    if ($jobStatus === $filterStatus || $deliveryStatuses->contains($filterStatus)) {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return true;
+            })->values();
+
+            Log::info('Filtered Stuart Jobs', [
+                'user_id' => $user->id,
+                'filter_status' => $filterStatus ?: 'all',
+                'total_jobs' => $filteredJobs->count(),
+            ]);
+
+            return $this->success($filteredJobs, 'Filtered jobs fetched successfully.', 200);
         } catch (\Exception $e) {
 
             Log::error('Stuart API Error: ' . $e->getMessage(), [

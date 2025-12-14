@@ -18,9 +18,10 @@ Route::controller(LoginController::class)->prefix('users')->group(function () {
 });
 
 // User Profile
-Route::group(['middleware' => 'auth:sanctum'], function() {
+Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::controller(UserController::class)->prefix('user')->group(function () {
-        Route::post('/onbodding', 'onbodding');
+        Route::post('/set-name', 'setName');
+        Route::post('/set-address', 'setAddress');
         Route::get('/profile', 'profile');
         Route::post('/update-profile', 'updateProfile');
         Route::post('/logout', 'logout');
@@ -29,5 +30,6 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::controller(DeliveryController::class)->prefix('delivery')->group(function () {
         Route::post('/create-job', 'createJob');
         Route::get('/stuart/job/{jobId}', 'getJob');
+        Route::get('/stuart/jobs', 'getJobs');
     });
 });
