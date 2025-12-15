@@ -41,4 +41,9 @@ return [
         // 'base_uri' => env('STUART_BASE_URI', 'https://api.stuart.com/'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
 ];

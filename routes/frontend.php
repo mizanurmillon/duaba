@@ -16,3 +16,12 @@ Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
 //Dynamic Page
 Route::get('/page/privacy-and-policy', [PageController::class, 'privacyAndPolicy'])->name('dynamicPage.privacyAndPolicy');
+
+
+Route::get('/payment/success', function () {
+    return view('frontend.layouts.pages.success');
+})->name('payment.success');
+
+Route::get('/payment/cancel', function () {
+    return view('frontend.layouts.pages.cancel');
+})->name('payment.cancel');

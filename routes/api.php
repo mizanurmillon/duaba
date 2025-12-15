@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,4 +33,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/stuart/job/{jobId}', 'getJob');
         Route::get('/stuart/jobs', 'getJobs');
     });
+
+    Route::controller(PaymentController::class)->prefix('payment')->group(function () {
+        Route::post('/', 'createStripeCheckout');
+    });
+});
+
+Route::controller(PaymentController::class)->group(function () {
+    Route::get('/checkout-success', 'checkoutSuccess')->name('checkout.success');
+    Route::get('/checkout-cancel', 'checkoutCancel')->name('checkout.cancel');
 });
