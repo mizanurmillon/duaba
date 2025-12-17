@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryJob;
+use App\Models\Payment;
+use App\Models\SystemSetting;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Stripe\Stripe;
 use Stripe\Checkout\Session;
+use Stripe\Stripe;
 
 class PaymentController extends Controller
 {
@@ -22,8 +25,16 @@ class PaymentController extends Controller
             return $this->error([], 'User not found', 404);
         }
 
+        $platformFee = SystemSetting::first();
+
+        $deliveryJob = DeliveryJob::find($request->input('deliver_job_id'));
+
+        $priceTaxIncluded = $deliveryJob->stuart_response['pricing']['price_tax_included'];
+        $priceTaxExcluded = $deliveryJob->stuart_response['pricing']['price_tax_excluded'];
+        $tax_amount = $deliveryJob->stuart_response['pricing']['tax_amount'];
+
         // Stuart price (GBP)
-        $amount = $request->input('amount') + 5; // price_tax_included
+        $amount = $priceTaxIncluded + $platformFee->platform_fee;
 
         $session = Session::create([
             'payment_method_types' => ['card'],
@@ -33,15 +44,20 @@ class PaymentController extends Controller
                     'currency' => 'gbp',
                     'product_data' => [
                         'name' => 'Stuart Delivery Payment',
+                        'description' => "PriceTaxExcluded: £{$priceTaxExcluded}\n Tax: £{$tax_amount} Subtotal: £{$priceTaxIncluded}\n Platform Fee: £{$platformFee->platform_fee}",
                     ],
-                    'unit_amount' => $amount * 100, // Stripe uses cents
+                    'unit_amount' => $amount * 100,
                 ],
                 'quantity' => 1,
             ]],
             'success_url'          => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url'           => route('checkout.cancel') . '?redirect_url=' . $request->get('cancel_redirect_url'),
             'metadata' => [
+                'user_id'              => $user->id,
+                'deliver_job_id'       => $deliveryJob->id,
+                'sub_total'            => $priceTaxIncluded,
                 'amount'               => $amount,
+                'platform_fee'         => $platformFee->platform_fee,
                 'success_redirect_url' => '/payment/success',
                 'cancel_redirect_url'  => '/payment/cancel',
             ],
@@ -62,9 +78,38 @@ class PaymentController extends Controller
 
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
+
             $session = Session::retrieve($sessionId);
 
-            $success_redirect_url = $metadata->success_redirect_url ?? null;
+            //metadata
+            $success_redirect_url = $session->metadata->success_redirect_url ?? '/';
+            $user = $session->metadata->user_id;
+            $deliver_job_id = $session->metadata->deliver_job_id;
+            $sub_total = $session->metadata->sub_total;
+            $amount = $session->metadata->amount;
+            $platform_fee = $session->metadata->platform_fee;
+
+            if ($session->payment_status === 'paid') {
+                Payment::create([
+                    'user_id'        => $user,
+                    'deliver_job_id' => $deliver_job_id,
+                    'sub_total'     => $sub_total,
+                    'amount'        => $amount,
+                    'platform_fee'  => $platform_fee,
+                    'status'        => 'success',
+                    'payment_method' => 'stripe',
+                ]);
+            } else if ($session->payment_status === 'unpaid') {
+                Payment::create([
+                    'user_id'        => $user,
+                    'deliver_job_id' => $deliver_job_id,
+                    'sub_total'     => $sub_total,
+                    'amount'        => $amount,
+                    'platform_fee'  => $platform_fee,
+                    'status'        => 'failed',
+                    'payment_method' => 'stripe',
+                ]);
+            }
 
             return redirect($success_redirect_url);
         } catch (\Exception $e) {
@@ -72,10 +117,9 @@ class PaymentController extends Controller
         }
     }
 
+
     public function checkoutCancel(Request $request)
     {
-        $cancel_redirect_url = $request->query('redirect_url');
-
-        return redirect($cancel_redirect_url);
+        return redirect('/payment/cancel');
     }
 }

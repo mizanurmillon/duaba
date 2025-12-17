@@ -8,16 +8,16 @@ return new class extends Migration {
     /**
      * Run the migrations.
      */
-    public function up(): void {
+    public function up(): void
+    {
         Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->nullable();
-            $table->string('email')->nullable();
             $table->string('system_name')->nullable();
+            $table->string('email')->nullable();
             $table->string('copyright_text')->nullable();
             $table->string('logo')->nullable();
             $table->string('favicon')->nullable();
-            $table->longText('description')->nullable();
+            $table->float('platform_fee')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -26,7 +26,8 @@ return new class extends Migration {
     /**
      * Reverse the migrations.
      */
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('system_settings');
     }
 };
