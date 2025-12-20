@@ -30,6 +30,8 @@ class LoginController extends Controller
         );
 
         Mail::to($user->email)->send(new VerificationOtp($user, $code));
+
+        return $code;
     }
 
     public function login(Request $request)
@@ -48,16 +50,20 @@ class LoginController extends Controller
 
             if ($user) {
                 // Existing user → send OTP only
-                $this->sendOtp($user);
+                $otp = $this->sendOtp($user);
             } else {
                 // New user → create first, then send OTP
                 $user = User::create([
                     'email' => $request->email,
                 ]);
 
-                $this->sendOtp($user);
+                $otp = $this->sendOtp($user);
             }
-            return $this->success([], 'OTP sent to your email. Please verify to complete login.', 200);
+            return $this->success(
+                ['otp' => $otp],
+                'OTP sent to your email. Please verify to complete login.',
+                200
+            );
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
@@ -75,9 +81,9 @@ class LoginController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        $this->sendOtp($user);
+        $otp = $this->sendOtp($user);
 
-        return $this->success([], 'OTP resent to your email.', 200);
+        return $this->success(['otp' => $otp], 'OTP resent to your email.', 200);
     }
 
     public function otpVerify(Request $request)
@@ -92,7 +98,7 @@ class LoginController extends Controller
         }
 
         try {
-             // Retrieve the user by email
+            // Retrieve the user by email
             $user = User::where('email', $request->input('email'))->first();
 
             $verification = EmailOtp::where('user_id', $user->id)
@@ -106,9 +112,11 @@ class LoginController extends Controller
 
                 $verification->delete();
 
-                if($user->name == null || $user->address == null ||
-                   $user->latitude == null ||
-                   $user->longitude == null ) {
+                if (
+                    $user->name == null || $user->address == null ||
+                    $user->latitude == null ||
+                    $user->longitude == null
+                ) {
                     // User needs to complete onboarding
                     $user->setAttribute('onboarding', false);
                 } else {
@@ -123,7 +131,6 @@ class LoginController extends Controller
 
                 return $this->error([], 'Invalid or expired OTP', 400);
             }
-            
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
