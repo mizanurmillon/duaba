@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\DeliveryController;
-use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\Auth\LoginController;
+use App\Http\Controllers\Api\SaveAddressController;
 
 //Login API
 Route::controller(LoginController::class)->prefix('users')->group(function () {
@@ -36,6 +37,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
         Route::post('/', 'createStripeCheckout');
+    });
+
+    Route::controller(SaveAddressController::class)->prefix('address')->group(function () {
+        Route::post('/save', 'store');
+        Route::get('/list', 'index');
+        Route::get('/{addressId}', 'show');
+        Route::post('/{addressId}', 'update');
+        Route::delete('/{addressId}', 'destroy');
     });
 });
 

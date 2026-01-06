@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeliveryJob;
 use App\Models\Payment;
 use App\Models\SystemSetting;
+use App\Services\StuartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,14 @@ use Stripe\Stripe;
 class PaymentController extends Controller
 {
     use ApiResponse;
+
+    protected $stuart;
+
+    public function __construct(StuartService $stuart)
+    {
+        $this->stuart = $stuart;
+    }
+
     public function createStripeCheckout(Request $request)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -27,11 +36,16 @@ class PaymentController extends Controller
 
         $platformFee = SystemSetting::first();
 
-        $deliveryJob = DeliveryJob::find($request->input('deliver_job_id'));
+        $deliveryJob = $this->stuart->getJob($request->input('deliver_job_id'));
+        // dd($deliveryJob);
 
-        $priceTaxIncluded = $deliveryJob->stuart_response['pricing']['price_tax_included'];
-        $priceTaxExcluded = $deliveryJob->stuart_response['pricing']['price_tax_excluded'];
-        $tax_amount = $deliveryJob->stuart_response['pricing']['tax_amount'];
+        $pricing = $deliveryJob['pricing'];
+
+        // dd($pricing['price_tax_included']);
+
+        $priceTaxIncluded = $pricing['price_tax_included'];
+        $priceTaxExcluded = $pricing['price_tax_excluded'];
+        $tax_amount = $pricing['tax_amount'];
 
         // Stuart price (GBP)
         $amount = $priceTaxIncluded + $platformFee->platform_fee;
@@ -54,7 +68,7 @@ class PaymentController extends Controller
             'cancel_url'           => route('checkout.cancel') . '?redirect_url=' . $request->get('cancel_redirect_url'),
             'metadata' => [
                 'user_id'              => $user->id,
-                'deliver_job_id'       => $deliveryJob->id,
+                'deliver_job_id'       => $deliveryJob['id'],
                 'sub_total'            => $priceTaxIncluded,
                 'amount'               => $amount,
                 'platform_fee'         => $platformFee->platform_fee,
@@ -123,5 +137,3 @@ class PaymentController extends Controller
         return redirect('/payment/cancel');
     }
 }
-
-

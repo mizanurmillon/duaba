@@ -14,6 +14,6 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.svaalpha.com
-          username: nanaobiriyeboah@nanaobiriyeboah.svaalpha.com
-          password: "svaalpha_nanaobiriyeboah"
+          server: ftp.thewarriors.team
+          username: nanaobiriyeboah@nanaobiriyeboah.thewarriors.team
+          password: "thewarriors_nanaobiriyeboah"

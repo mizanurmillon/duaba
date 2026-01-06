@@ -15,7 +15,9 @@ Route::get('/storage', [ResetController::class, 'storage'])->name('storage');
 Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
 //Dynamic Page
-Route::get('/page/privacy-and-policy', [PageController::class, 'privacyAndPolicy'])->name('dynamicPage.privacyAndPolicy');
+Route::get('/page/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('dynamicPage.termsAndConditions');
+Route::get('/page/legal', [PageController::class, 'legal'])->name('dynamicPage.legal');
+Route::get('/page/help', [PageController::class, 'help'])->name('dynamicPage.help');
 
 
 Route::get('/payment/success', function () {

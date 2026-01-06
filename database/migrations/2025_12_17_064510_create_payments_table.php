@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('deliver_job_id')->constrained('delivery_jobs')->cascadeOnDelete();
+            $table->integer('deliver_job_id');
             $table->float('sub_total')->nullable();
             $table->float('amount')->nullable();
             $table->float('platform_fee')->nullable();
