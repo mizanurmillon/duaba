@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeliveryJob;
 use App\Models\Payment;
 use App\Models\SystemSetting;
+use App\Notifications\PaymentNotification;
 use App\Services\StuartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class PaymentController extends Controller
     use ApiResponse;
 
     protected $stuart;
+
 
     public function __construct(StuartService $stuart)
     {
@@ -104,7 +106,7 @@ class PaymentController extends Controller
             $platform_fee = $session->metadata->platform_fee;
 
             if ($session->payment_status === 'paid') {
-                Payment::create([
+                $platform_fee = Payment::create([
                     'user_id'        => $user,
                     'deliver_job_id' => $deliver_job_id,
                     'sub_total'     => $sub_total,
@@ -114,7 +116,7 @@ class PaymentController extends Controller
                     'payment_method' => 'stripe',
                 ]);
             } else if ($session->payment_status === 'unpaid') {
-                Payment::create([
+                $platform_fee = Payment::create([
                     'user_id'        => $user,
                     'deliver_job_id' => $deliver_job_id,
                     'sub_total'     => $sub_total,
@@ -124,6 +126,13 @@ class PaymentController extends Controller
                     'payment_method' => 'stripe',
                 ]);
             }
+
+            $platform_fee->user->notify(new PaymentNotification(
+                subject: 'Payment Notification',
+                message: 'You have a successful payment for Stuart Delivery',
+                type: 'success',
+                payment: $platform_fee
+            ));
 
             return redirect($success_redirect_url);
         } catch (\Exception $e) {

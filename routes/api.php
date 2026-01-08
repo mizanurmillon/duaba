@@ -5,7 +5,9 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\Auth\LoginController;
+use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\SaveAddressController;
+use Mockery\Matcher\Not;
 
 //Login API
 Route::controller(LoginController::class)->prefix('users')->group(function () {
@@ -45,6 +47,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/{addressId}', 'show');
         Route::post('/{addressId}', 'update');
         Route::delete('/{addressId}', 'destroy');
+    });
+
+    Route::controller(GetNotificationController::class)->prefix('notification')->group(function () {
+        Route::get('/', 'getNotifications');
     });
 });
 

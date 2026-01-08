@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\DeliveryJob;
-use App\Services\StuartService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Services\StuartService;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Notifications\DeliveryJobNotification;
 
 class DeliveryController extends Controller
 {
@@ -131,6 +132,13 @@ class DeliveryController extends Controller
                 'stuart_job_id' => $stuartJobId,
                 'stuart_response' => $response,
             ]);
+
+            $job->user->notify(new DeliveryJobNotification(
+                subject: 'Delivery Job Created',
+                message: 'A new delivery job has been created.',
+                delivery: $job,
+                type: 'success',
+            ));
 
             return $this->success($job, 'Delivery job created & stored successfully.', 200);
         } catch (\Exception $e) {
