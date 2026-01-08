@@ -22,9 +22,28 @@ class GetNotificationController extends Controller
         $data = $user->notifications()->select('id', 'data', 'read_at', 'created_at')->latest()->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'Notification not found', 404);
+            return $this->error([], 'Notification not found', 200);
         }
 
         return $this->success($data, 'Notification fetched successfully', 200);
+    }
+
+    public function removeNotification($notificationId)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error([], 'User not found', 404);
+        }
+
+        $notification = $user->notifications()->find($notificationId);
+
+        if (!$notification) {
+            return $this->error([], 'Notification not found', 404);
+        }
+
+        $notification->delete();
+
+        return $this->success([], 'Notification deleted successfully', 200);
     }
 }

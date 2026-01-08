@@ -51,6 +51,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::controller(GetNotificationController::class)->prefix('notification')->group(function () {
         Route::get('/', 'getNotifications');
+        Route::get('/{notificationId}', 'removeNotification');
     });
 });
 
