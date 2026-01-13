@@ -1,24 +1,37 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\Auth\LoginController;
+use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\GetNotificationController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SaveAddressController;
-use Mockery\Matcher\Not;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
+
+
+//Register API
+Route::controller(RegisterController::class)->prefix('users')->group(function () {
+    // User Register
+    Route::post('/register', 'Register');
+});
 
 //Login API
 Route::controller(LoginController::class)->prefix('users')->group(function () {
     // User Login
     Route::post('/login', 'login');
 
+    // Verify Email
+    Route::post('/email-verify', 'emailVerify');
+
     // Resend OTP
     Route::post('/otp-resend', 'otpResend');
 
     // Verify OTP
     Route::post('/otp-verify', 'otpVerify');
+
+    //Reset Password
+    Route::post('/reset-password', 'resetPassword');
 });
 
 // User Profile

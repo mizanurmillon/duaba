@@ -25,6 +25,15 @@ class UsersTableSeeder extends Seeder
                 'remember_token' => Str::random(10),
                 'created_at' => now(),
             ],
+            [
+                'name' => 'User',
+                'email' => 'user@user.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('12345678'),
+                'role' => 'user',
+                'remember_token' => Str::random(10),
+                'created_at' => now(),
+            ]
         ]);
     }
 }

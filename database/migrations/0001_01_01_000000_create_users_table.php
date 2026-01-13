@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('longitude')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
+            $table->string('password_reset_token', 10)->nullable();
             $table->enum('role', ['admin', 'user'])->default('user');
             $table->string('avatar')->nullable();
             $table->string('provider')->nullable(); // Field to store social provider name (e.g., 'google', 'facebook')

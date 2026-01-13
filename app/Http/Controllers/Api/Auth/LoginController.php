@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Models\User;
 use App\Models\EmailOtp;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Mail\VerificationOtp;
 use Illuminate\Support\Carbon;
+use App\Mail\ForgotPasswordOtp;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -25,45 +27,59 @@ class LoginController extends Controller
             ['user_id' => $user->id],
             [
                 'verification_code' => $code,
-                'expires_at'        => Carbon::now()->addMinutes(3),
+                'expires_at'        => Carbon::now()->addMinutes(5),
             ]
         );
 
-        Mail::to($user->email)->send(new VerificationOtp($user, $code));
-
-        return $code;
+        Mail::to($user->email)->send(new ForgotPasswordOtp($user, $code));
     }
 
-    public function login(Request $request)
+    public function Login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required'
         ]);
 
         if ($validator->fails()) {
             return $this->error([], $validator->errors()->first(), 422);
         }
 
-        try {
-            // Check if user already exists
-            $user = User::where('email', $request->email)->first();
+        $userData = User::where('email', $request->email)->first();
 
-            if ($user) {
-                // Existing user → send OTP only
-                $otp = $this->sendOtp($user);
+        if ($userData && Hash::check($request->password, $userData->password)) {
+            if ($userData->email_verified_at == null) {
+
+                $userData->setAttribute('token', null);
+
+                return $this->success($userData, 'OTP sent successfully', 200);
             } else {
-                // New user → create first, then send OTP
-                $user = User::create([
-                    'email' => $request->email,
-                ]);
-
-                $otp = $this->sendOtp($user);
+                $userData->setAttribute('token', $userData->createToken($userData->email)->plainTextToken);
             }
-            return $this->success(
-                ['otp' => $otp],
-                'OTP sent to your email. Please verify to complete login.',
-                200
-            );
+        } else {
+            return $this->error([], 'Invalid credentials', 401);
+        }
+
+        return $this->success($userData, 'User authenticated successfully', 200);
+    }
+
+    public function emailVerify(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
+        }
+
+        try {
+            // Retrieve the user by email
+            $user = User::where('email', $request->input('email'))->first();
+
+            $this->sendOtp($user);
+
+            return $this->success([], 'OTP has been sent successfully.', 200);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
@@ -76,25 +92,31 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->error([], $validator->errors()->first(), 422);
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        try {
+            // Retrieve the user by email
+            $user = User::where('email', $request->input('email'))->first();
 
-        $otp = $this->sendOtp($user);
+            $this->sendOtp($user);
 
-        return $this->success(['otp' => $otp], 'OTP resent to your email.', 200);
+            return $this->success([], 'OTP has been sent successfully.', 200);
+        } catch (\Exception $e) {
+            return $this->error([], $e->getMessage(), 500);
+        }
     }
 
     public function otpVerify(Request $request)
     {
+        // Validate the request
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
-            'otp'   => 'required|digits:6',
+            'otp'   => 'required|numeric|digits:6',
         ]);
 
         if ($validator->fails()) {
-            return $this->error([], $validator->errors()->first(), 422);
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
 
         try {
@@ -107,30 +129,54 @@ class LoginController extends Controller
                 ->first();
 
             if ($verification) {
+
                 $user->email_verified_at = Carbon::now();
+                $user->password_reset_token = Str::random(10);
                 $user->save();
 
                 $verification->delete();
-
-                if (
-                    $user->name == null || $user->address == null ||
-                    $user->latitude == null ||
-                    $user->longitude == null
-                ) {
-                    // User needs to complete onboarding
-                    $user->setAttribute('onboarding', false);
-                } else {
-                    $user->setAttribute('onboarding', true);
-                }
-
-                // Generate API token
-                $user->setAttribute('token', $user->createToken($user->email)->plainTextToken);
 
                 return $this->success($user, 'OTP Verified Successfully', 200);
             } else {
 
                 return $this->error([], 'Invalid or expired OTP', 400);
             }
+        } catch (\Exception $e) {
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'    => 'required|email|exists:users,email',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
+        ], [
+            'password.min' => 'The password must be at least 8 characters long.',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
+        }
+
+        try {
+            // Retrieve the user by email
+            $user = User::where('email', $request->input('email'))->first();
+
+            if (!$user->password_reset_token) {
+                return $this->error([], 'Password reset token not found', 400);
+            }
+
+            $user->password = Hash::make($request->input('password'));
+            $user->password_reset_token = null;
+            $user->save();
+
+            return $this->success($user, 'Password Reset successfully.', 200);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
