@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\DeliveryJob;
+use Stripe\Stripe;
 use App\Models\Payment;
-use App\Models\SystemSetting;
-use App\Notifications\PaymentNotification;
-use App\Services\StuartService;
+use Stripe\PaymentIntent;
+use App\Models\DeliveryJob;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Stripe\Checkout\Session;
-use Stripe\Stripe;
+use App\Models\SystemSetting;
+use App\Services\StuartService;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use App\Notifications\PaymentNotification;
+use Illuminate\Container\Attributes\Log;
 
 class PaymentController extends Controller
 {
@@ -39,11 +41,8 @@ class PaymentController extends Controller
         $platformFee = SystemSetting::first();
 
         $deliveryJob = $this->stuart->getJob($request->input('deliver_job_id'));
-        // dd($deliveryJob);
 
         $pricing = $deliveryJob['pricing'];
-
-        // dd($pricing['price_tax_included']);
 
         $priceTaxIncluded = $pricing['price_tax_included'];
         $priceTaxExcluded = $pricing['price_tax_excluded'];
@@ -55,6 +54,9 @@ class PaymentController extends Controller
         $session = Session::create([
             'payment_method_types' => ['card'],
             'mode' => 'payment',
+            'payment_intent_data' => [
+                'capture_method' => 'manual',
+            ],
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'gbp',
@@ -62,7 +64,7 @@ class PaymentController extends Controller
                         'name' => 'Stuart Delivery Payment',
                         'description' => "PriceTaxExcluded: £{$priceTaxExcluded}\n Tax: £{$tax_amount} Subtotal: £{$priceTaxIncluded}\n Platform Fee: £{$platformFee->platform_fee}",
                     ],
-                    'unit_amount' => $amount * 100,
+                    'unit_amount' => (int) round($amount * 100),
                 ],
                 'quantity' => 1,
             ]],
@@ -87,54 +89,37 @@ class PaymentController extends Controller
     public function checkoutSuccess(Request $request)
     {
         $sessionId = $request->query('session_id');
-
-        if (!$sessionId) {
-            return $this->error([], 'Session ID is required', 400);
-        }
+        Stripe::setApiKey(config('services.stripe.secret'));
 
         try {
-            Stripe::setApiKey(config('services.stripe.secret'));
 
-            $session = Session::retrieve($sessionId);
+            $session = Session::retrieve([
+                'id' => $sessionId,
+                'expand' => ['payment_intent']
+            ]);
 
-            //metadata
-            $success_redirect_url = $session->metadata->success_redirect_url ?? '/';
-            $user = $session->metadata->user_id;
-            $deliver_job_id = $session->metadata->deliver_job_id;
-            $sub_total = $session->metadata->sub_total;
-            $amount = $session->metadata->amount;
-            $platform_fee = $session->metadata->platform_fee;
+            $metadata = $session->metadata;
+            $paymentIntent = $session->payment_intent;
 
-            if ($session->payment_status === 'paid') {
-                $platform_fee = Payment::create([
-                    'user_id'        => $user,
-                    'deliver_job_id' => $deliver_job_id,
-                    'sub_total'     => $sub_total,
-                    'amount'        => $amount,
-                    'platform_fee'  => $platform_fee,
-                    'status'        => 'success',
-                    'payment_method' => 'stripe',
-                ]);
-            } else if ($session->payment_status === 'unpaid') {
-                $platform_fee = Payment::create([
-                    'user_id'        => $user,
-                    'deliver_job_id' => $deliver_job_id,
-                    'sub_total'     => $sub_total,
-                    'amount'        => $amount,
-                    'platform_fee'  => $platform_fee,
-                    'status'        => 'failed',
-                    'payment_method' => 'stripe',
-                ]);
+
+            if ($session->payment_status === 'paid' || $paymentIntent->status === 'requires_capture') {
+                $payment = Payment::updateOrCreate(
+                    ['payment_intent_id' => $paymentIntent->id],
+                    [
+                        'user_id'        => $metadata->user_id,
+                        'deliver_job_id' => $metadata->deliver_job_id,
+                        'sub_total'      => $metadata->sub_total,
+                        'amount'         => $metadata->amount,
+                        'platform_fee'   => $metadata->platform_fee,
+                        'status'         => 'payment_hold', // Authorized successfully
+                        'payment_method' => 'stripe',
+                    ]
+                );
+
+                return redirect($metadata->success_redirect_url);
             }
 
-            $platform_fee->user->notify(new PaymentNotification(
-                subject: 'Payment Notification',
-                message: 'You have a successful payment for Stuart Delivery',
-                type: 'success',
-                payment: $platform_fee
-            ));
-
-            return redirect($success_redirect_url);
+            return redirect($metadata->cancel_redirect_url);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
@@ -143,6 +128,60 @@ class PaymentController extends Controller
 
     public function checkoutCancel(Request $request)
     {
-        return redirect('/payment/cancel');
+        $sessionId = $request->query('session_id');
+
+        if (! $sessionId) {
+            return redirect($request->redirect_url ?? null);
+        }
+
+        $checkoutSession = Session::retrieve($sessionId);
+        $metadata        = $checkoutSession->metadata;
+
+        $cancel_redirect_url = $metadata->cancel_redirect_url ?? null;
+
+        return redirect($cancel_redirect_url);
+    }
+
+    public function deliveryCompleted($deliver_job_id)
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $deliveryJob = $this->stuart->getJob($deliver_job_id);
+
+        if (!$deliveryJob) {
+            return $this->error([], 'Delivery job not found', 404);
+        }
+
+        $validStatuses = ['delivered', 'completed'];
+
+        if (!in_array($deliveryJob['status'], $validStatuses)) {
+            return $this->error([], 'Delivery job is not completed yet. Current status: ' . $deliveryJob['status'], 200);
+        }
+
+        $payment = Payment::where('deliver_job_id', $deliver_job_id)
+            ->where('status', 'payment_hold')
+            ->first();
+
+        if ($payment && $payment->payment_intent_id) {
+            try {
+                $intent = PaymentIntent::retrieve($payment->payment_intent_id);
+
+                if ($intent->status === 'requires_capture') {
+                    $intent->capture();
+
+                    $payment->update([
+                        'status' => 'success',
+                    ]);
+
+                    return $this->success($payment, 'Payment captured successfully', 200);
+                }
+
+                return $this->error([], 'Payment is not in a capturable state: ' . $intent->status, 400);
+            } catch (\Exception $e) {
+                return $this->error([], 'Stripe Error: ' . $e->getMessage(), 500);
+            }
+        }
+
+        return $this->error([], 'No hold payment found for this job', 404);
     }
 }

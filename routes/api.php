@@ -52,6 +52,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
         Route::post('/', 'createStripeCheckout');
+        Route::get('/completed/{deliver_job_id}', 'deliveryCompleted');
     });
 
     Route::controller(SaveAddressController::class)->prefix('address')->group(function () {

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->float('amount')->nullable();
             $table->float('platform_fee')->nullable();
             $table->string('payment_method')->nullable();
-            $table->enum('status', ['pending', 'success', 'failed'])->default('pending')->nullable();
+            $table->string('payment_intent_id')->nullable();
+            $table->enum('status', ['payment_hold', 'success', 'failed'])->default('payment_hold')->nullable();
             $table->timestamps();
         });
     }
