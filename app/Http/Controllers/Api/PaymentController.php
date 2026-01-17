@@ -116,10 +116,14 @@ class PaymentController extends Controller
                     ]
                 );
 
-                return redirect($metadata->success_redirect_url);
+                // return redirect($metadata->success_redirect_url);
+
+                return $this->success($payment, 'Payment created successfully', 200);
             }
 
-            return redirect($metadata->cancel_redirect_url);
+            // return redirect($metadata->cancel_redirect_url);
+
+            return $this->error([], 'Payment failed', 400);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
