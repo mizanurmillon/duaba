@@ -100,4 +100,30 @@ class UserController extends Controller
 
         return $this->success([], 'Logout successful', 200);
     }
+
+    public function changePassword(Request $request) {}
+
+    public function deleteAccount(Request $request) {
+
+       try {
+            // Get the authenticated user
+            $user = auth()->user();
+
+            // Delete the user's avatar if it exists
+            if ($user->avatar) {
+                $previousImagePath = public_path($user->avatar);
+                if (file_exists($previousImagePath)) {
+                    unlink($previousImagePath);
+                }
+            }
+
+            // Delete the user
+            $user->delete();
+
+            return $this->success([], 'User deleted successfully', '200');
+        } catch (\Exception $e) {
+            return $this->error([], $e->getMessage(), 500);
+        }
+        
+    }
 }

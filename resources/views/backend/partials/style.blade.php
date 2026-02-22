@@ -1,18 +1,17 @@
 <!-- App favicon -->
-<link rel="shortcut icon" href="{{ asset('backend') }}/assets/images/favicon.ico">
-<link href="{{ asset('backend') }}/assets/libs/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css"
-    rel="stylesheet" />
+<link rel="shortcut icon" href="{{ asset('backend/assets/images/logo-minimize.svg') }}">
+<link href="{{ asset('backend/assets/libs/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css') }}" rel="stylesheet" />
 <!-- Bootstrap Css -->
-<link href="{{ asset('backend') }}/assets/css/toastr.css" rel="stylesheet" type="text/css" />
-<link href="{{ asset('backend') }}/assets/css/datatables.min.css" rel="stylesheet" type="text/css" />
-<link href="{{ asset('backend') }}/assets/css/dropify.min.css" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/toastr.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/datatables.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/dropify.min.css') }}" rel="stylesheet" type="text/css" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-<link href="{{ asset('backend') }}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
 <!-- Icons Css -->
-<link href="{{ asset('backend') }}/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
 <!-- App Css-->
-<link href="{{ asset('backend') }}/assets/css/app.min.css" rel="stylesheet" type="text/css" />
-<link href="{{ asset('backend') }}/assets/css/custom.css" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
 
 {{-- dropify and ck-editor start --}}
 <style>
@@ -27,17 +26,27 @@
     div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
         background-color: #004C62 !important;
     }
+
     .swal2-icon.swal2-info {
         border-color: #004C62 !important;
         color: #004C62 !important;
     }
+
     .btn.btn-primary {
         border-color: var(--bs-warning);
         background-color: #004C62 !important;
     }
-    .btn-check:checked + .btn.btn-primary, .btn-check:active + .btn.btn-primary, .btn.btn-primary:focus:not(.btn-active), .btn.btn-primary:hover:not(.btn-active), .btn.btn-primary:active:not(.btn-active), .btn.btn-primary.active, .btn.btn-primary.show, .show > .btn.btn-primary {
+
+    .btn-check:checked+.btn.btn-primary,
+    .btn-check:active+.btn.btn-primary,
+    .btn.btn-primary:focus:not(.btn-active),
+    .btn.btn-primary:hover:not(.btn-active),
+    .btn.btn-primary:active:not(.btn-active),
+    .btn.btn-primary.active,
+    .btn.btn-primary.show,
+    .show>.btn.btn-primary {
         border-color: var(--bs-primary-active);
-        background-color:#004C62 !important;
+        background-color: #004C62 !important;
     }
 </style>
 {{-- dropify and ck-editor end --}}

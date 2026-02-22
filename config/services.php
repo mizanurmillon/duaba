@@ -46,4 +46,18 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'google'   => [
+        'client_id' => '188277747840-e3f3v9cd1l11uhifhm5m6mp63no8kplb.apps.googleusercontent.com',
+    ],
+
+
+    'apple' => [
+        'client_id'     => env('APPLE_CLIENT_ID'),     // e.g., com.moto.master
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect'      => env('APPLE_REDIRECT_URI'),
+        'team_id'       => env('APPLE_TEAM_ID'),
+        'key_id'        => env('APPLE_KEY_ID'),
+        'private_key'   => env('APPLE_PRIVATE_KEY_PATH'), // Path to .p8 file
+    ],
+
 ];

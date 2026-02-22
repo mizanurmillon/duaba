@@ -36,12 +36,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (AuthenticationException $e, $request) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Unauthenticated',
-                'data' => [],
-                'code' => 401
-            ], 401);
-        });
+        // $exceptions->render(function (AuthenticationException $e, $request) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Unauthenticated',
+        //         'data' => [],
+        //         'code' => 401
+        //     ], 401);
+        // });
     })->create();

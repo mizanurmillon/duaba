@@ -1,24 +1,17 @@
-<!--begin::Fonts(mandatory for all pages)-->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" /> <!--end::Fonts-->
-
-<!--begin::Vendor Stylesheets(used for this page only)-->
-<link rel="stylesheet" type="text/css" href="{{ asset('backend/plugins/custom/leaflet/leaflet.bundle.css') }}" />
-<link rel="stylesheet" type="text/css" href="{{ asset('backend/plugins/custom/datatables/datatables.bundle.css') }}" />
-<!--end::Vendor Stylesheets-->
-
-{{-- main resourse start --}}
-<link rel="stylesheet" href="{{ asset('backend/css/datatables.min.css') }}" />
-<link rel="stylesheet" href="{{ asset('backend/css/lineicons.css') }}" />
-<link rel="stylesheet" href="{{ asset('backend/css/bootstrap-icons.css') }}" />
-<link rel="stylesheet" href="{{ asset('backend/css/toastr.css') }}" />
-<link rel="stylesheet" href="{{ asset('backend/css/dropify.min.css') }}">
-{{-- main resourse end --}}
-
-<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-<link rel="stylesheet" type="text/css" href="{{ asset('backend/plugins/global/plugins.bundle.css') }}" />
-<link rel="stylesheet" type="text/css" href="{{ asset('backend/css/style.bundle.css') }}" />
-<link rel="stylesheet" type="text/css" href="{{ asset('backend/css/custom.css') }}" />
-<!--end::Global Stylesheets Bundle-->
+<!-- App favicon -->
+<link rel="shortcut icon" href="{{ asset('backend/assets/images/logo-minimize.svg') }}">
+<link href="{{ asset('backend/assets/libs/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css') }}" rel="stylesheet" />
+<!-- Bootstrap Css -->
+<link href="{{ asset('backend/assets/css/toastr.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/datatables.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/dropify.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+<!-- Icons Css -->
+<link href="{{ asset('backend/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
+<!-- App Css-->
+<link href="{{ asset('backend/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('backend/assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
 
 {{-- dropify and ck-editor start --}}
 <style>
@@ -29,31 +22,55 @@
     .dropify-wrapper .dropify-render {
         display: unset !important;
     }
+
+    div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+        background-color: #004C62 !important;
+    }
+
+    .swal2-icon.swal2-info {
+        border-color: #004C62 !important;
+        color: #004C62 !important;
+    }
+
+    .btn.btn-primary {
+        border-color: var(--bs-warning);
+        background-color: #004C62 !important;
+    }
+
+    .btn-check:checked+.btn.btn-primary,
+    .btn-check:active+.btn.btn-primary,
+    .btn.btn-primary:focus:not(.btn-active),
+    .btn.btn-primary:hover:not(.btn-active),
+    .btn.btn-primary:active:not(.btn-active),
+    .btn.btn-primary.active,
+    .btn.btn-primary.show,
+    .show>.btn.btn-primary {
+        border-color: var(--bs-primary-active);
+        background-color: #004C62 !important;
+    }
 </style>
 {{-- dropify and ck-editor end --}}
 
 {{-- toastr start --}}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
-    #btnSuccess {
-        background-color: #1bc5bd;
-        border-color: #1bc5bd;
+    .toast-success {
+        background-color: #EDF1FD !important;
+        border-color: #EDF1FD !important;
     }
 
-    #btnInfo {
-        background-color: #187de4;
-        border-color: #187de4;
+    .toast-info {
+        background-color: #EDF1FD;
+        border-color: #EDF1FD;
     }
 
-    #btnWarning {
-        background-color: #ee9d01;
-        border-color: #ee9d01
+    .toast-warning {
+        background-color: #EDF1FD;
+        border-color: #EDF1FD
     }
 
-    #btnError {
-        background-color: #ee2d41;
-        border-color: #ee2d41;
+    .toast-error {
+        background-color: #EDF1FD;
+        border-color: #EDF1FD;
     }
 
     #btnSuccess,

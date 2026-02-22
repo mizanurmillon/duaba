@@ -6,9 +6,14 @@ use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SaveAddressController;
+use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
+
+//Social Login
+Route::post('/social-login', [SocialAuthController::class, 'socialLogin']);
+Route::post('/apple-login', [SocialAuthController::class, 'appleLogin']);
 
 //Register API
 Route::controller(RegisterController::class)->prefix('users')->group(function () {
@@ -42,6 +47,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/profile', 'profile');
         Route::post('/update-profile', 'updateProfile');
         Route::post('/logout', 'logout');
+        Route::post('/change-password', 'changePassword');
+        Route::delete('/delete-account', 'deleteAccount');
     });
 
     Route::controller(DeliveryController::class)->prefix('delivery')->group(function () {
