@@ -44,6 +44,9 @@ return [
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
+        'live_key' => env('LIVE_STRIPE_KEY'),
+        'live_secret' => env('LIVE_STRIPE_SECRET'),
+        'mode' => env('MODE', 'test'), // 'test' or 'live'
     ],
 
     'google'   => [

@@ -30,7 +30,11 @@ class PaymentController extends Controller
 
     public function createStripeCheckout(Request $request)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        if(config('services.stripe.mode') === 'live') {
+            Stripe::setApiKey(config('services.stripe.live_secret'));
+        }else {
+            Stripe::setApiKey(config('services.stripe.secret'));
+        }
 
         $user = auth()->user();
 
@@ -89,7 +93,12 @@ class PaymentController extends Controller
     public function checkoutSuccess(Request $request)
     {
         $sessionId = $request->query('session_id');
-        Stripe::setApiKey(config('services.stripe.secret'));
+
+        if(config('services.stripe.mode') === 'live') {
+            Stripe::setApiKey(config('services.stripe.live_secret'));
+        }else {
+            Stripe::setApiKey(config('services.stripe.secret'));
+        }
 
         try {
 
@@ -148,7 +157,11 @@ class PaymentController extends Controller
 
     public function deliveryCompleted($deliver_job_id)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        if(config('services.stripe.mode') === 'live') {
+            Stripe::setApiKey(config('services.stripe.live_secret'));
+        }else {
+            Stripe::setApiKey(config('services.stripe.secret'));
+        }
 
         $deliveryJob = $this->stuart->getJob($deliver_job_id);
 
