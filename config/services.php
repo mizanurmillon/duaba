@@ -50,7 +50,7 @@ return [
     ],
 
     'google'   => [
-        'client_id' => '188277747840-e3f3v9cd1l11uhifhm5m6mp63no8kplb.apps.googleusercontent.com',
+        'client_id' => '188277747840-v5p3udsqi152v80k5d6v98s3bblka6i8.apps.googleusercontent.com',
     ],
 
 

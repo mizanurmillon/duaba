@@ -42,6 +42,8 @@ class SocialAuthController extends Controller
 
             $payload = $response->json();
 
+            // dd($payload);
+
             // 2. VALIDATE AUDIENCE (SECURITY CRITICAL)
             if ($payload['aud'] !== config('services.google.client_id')) {
                 return $this->error([], 'Invalid token audience', 401);
@@ -61,8 +63,7 @@ class SocialAuthController extends Controller
         $avatarPath = null;
 
         if ($avatarUrl) {
-
-
+            // dd($avatarUrl);
             try {
                 if ($user->avatar) {
                     $previousImagePath = public_path($user->avatar);
